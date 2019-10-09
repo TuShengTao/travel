@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.travel.dao.IUserDao">
+    <select id="findUserInfoByName" parameterType="com.travel.pojo.UserView" resultType="com.travel.pojo.UserView">
+        select * from user_tb where user_name=#{userName}
+    </select>
+    <insert id="register" parameterType="com.travel.pojo.UserView" >
+         INSERT INTO user_tb(user_name,user_password,user_email) VALUE (#{userName},#{userPassWord}, #{userEmail})
+    </insert>
+
+
+</mapper>

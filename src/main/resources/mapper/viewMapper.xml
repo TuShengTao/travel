@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.travel.dao.IViewDao">
+    <select id="findFourHotView" resultType="com.travel.pojo.ViewView">
+    select a.view_id,a.view_name,view_price,view_summary,view_city,view_buycount,view_img,
+    ceil(view_comment_good/(sum(view_comment_bad+view_comment_good+view_comment_justok))/0.2) as view_comment
+    from view_tb as a,view_source_tb as b
+    where a.view_id=b.view_id
+	group by a.view_id
+    order by view_buycount desc limit 0,4
+    </select>
+    <select id="selectViewCount" resultType="int">
+        select count(*) from view_tb
+    </select>
+    <select id="searchViewByPage" parameterType="Map" resultType="com.travel.pojo.ViewView">
+         select a.view_id,a.view_name,view_price,view_summary,view_city,view_buycount,view_img,
+         ceil(view_comment_good/(sum(view_comment_bad+view_comment_good+view_comment_justok))/0.2) as view_comment from view_tb as a,view_source_tb as b
+        where a.view_id=b.view_id
+				group by a.view_id
+        order by view_buycount desc limit #{start},#{size}
+    </select>
+</mapper>

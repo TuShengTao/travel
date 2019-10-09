@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.travel.dao.IHotelDao">
+    <select id="findHotHotle" parameterType="com.travel.pojo.HotelView" resultType="com.travel.pojo.HotelView">
+    select a.hotel_id,hotel_name,hotel_avgprice,hotel_summary,hotel_city,hotel_buycount,hotel_img,
+    ceil(hotel_comment_good/(sum(hotel_comment_bad+hotel_comment_good+hotel_comment_justok))/0.2) as hotel_comment from hotel_tb as a,hotel_source_tb as b
+    where a.hotel_id=b.hotel_id
+	group by a.hotel_id
+    <if test="searchHotelCount==3 ">
+        order by hotel_buycount desc limit 0,3
+    </if>
+    <if test="searchHotelCount==5 ">
+        order by hotel_buycount desc limit 0,5
+    </if>
+    </select>
+    <select id="selectHotelCount" resultType="int">
+        select count(*) from hotel_tb
+    </select>
+    <select id="searchHotelByPage" parameterType="Map" resultType="com.travel.pojo.HotelView">
+         select a.hotel_id,hotel_name,hotel_avgprice,hotel_summary,hotel_city,hotel_buycount,hotel_img,ceil(hotel_comment_good/(sum(hotel_comment_bad+hotel_comment_good+hotel_comment_justok))/0.2) as hotel_comment from hotel_tb as a,hotel_source_tb as b
+        where a.hotel_id=b.hotel_id
+				group by a.hotel_id
+        order by hotel_buycount desc limit #{start},#{size}
+    </select>
+    <select id="searchHotelByLike" parameterType="Map" resultType="com.travel.pojo.HotelView">
+        select * from (
+        select a.hotel_id,hotel_name,hotel_country,hotel_avgprice,hotel_summary,hotel_city,hotel_buycount,hotel_img ,ceil(hotel_comment_good/(sum(hotel_comment_bad+hotel_comment_good+hotel_comment_justok))/0.2) as hotel_comment
+        from hotel_tb as a,hotel_source_tb as b
+        where a.hotel_id=b.hotel_id
+        group by a.hotel_id
+        )
+        as c
+        <where>
+            <if test="hotelCountry !=null and hotelCountry !=''">
+                hotel_country like  CONCAT('%',#{hotelCountry},'%')
+            </if>
+            <if test=" hotelCity !=null and hotelCity !=''">
+                and hotel_city like CONCAT('%',#{hotelCity},'%')
+            </if>
+            <if test=" hotelComment !=null and hotelComment !=''">
+                and hotel_comment = #{hotelComment}
+            </if>
+            <if test=" searchMaxPrice !=null and searchMaxPrice !=''">
+                and hotel_avgprice &lt;=#{searchMaxPrice }
+            </if>
+            <if test=" searchMinPrice !=null and searchMinPrice !=''">
+                and hotel_avgprice &gt;=#{searchMinPrice }
+            </if>
+
+        </where>
+          order by hotel_buycount desc limit #{start},#{size}
+
+    </select>
+    <select id="hotelLikeCount" parameterType="com.travel.pojo.HotelView" resultType="int">
+        select count(*)from (
+        select a.hotel_id,hotel_name,hotel_country,hotel_avgprice,hotel_summary,hotel_city,hotel_buycount,hotel_img ,ceil(hotel_comment_good/(sum(hotel_comment_bad+hotel_comment_good+hotel_comment_justok))/0.2) as hotel_comment
+        from hotel_tb as a,hotel_source_tb as b
+        where a.hotel_id=b.hotel_id
+        group by a.hotel_id
+        )
+        as c
+        <where>
+            <if test="hotelCountry !=null and hotelCountry !=''">
+                hotel_country like  CONCAT('%',#{hotelCountry},'%')
+            </if>
+            <if test=" hotelCity !=null and hotelCity !=''">
+                and hotel_city like CONCAT('%',#{hotelCity},'%')
+            </if>
+            <if test=" hotelComment !=null and hotelComment !=''">
+                and hotel_comment = #{hotelComment}
+            </if>
+            <if test=" searchMaxPrice !=null and searchMaxPrice !=''">
+                and hotel_avgprice &lt;=#{searchMaxPrice }
+            </if>
+            <if test=" searchMinPrice !=null and searchMinPrice !=''">
+                and hotel_avgprice &gt;=#{searchMinPrice }
+            </if>
+        </where>
+    </select>
+    <!-- 点击跳转时 传入 酒店id 根据酒店id 要查询出酒店展示的三张
+       （数据表要修改酒店和房间的图片 暂时不差图片）酒店名字
+        酒店详细信息 评论星级 酒店具体地址
+          第二条语句要根据酒店id查出 酒店的几个房间信息 房间价格 房间简介 房间图片暂时不查
+          -->
+    <select id="searchHotelById" parameterType="com.travel.pojo.HotelView" resultType="com.travel.pojo.HotelView">
+
+        select a.hotel_id,a.hotel_summary,a.hotel_buycount,a.hotel_city,a.hotel_avgprice,a.hotel_detail,a.hotel_name,a.hotel_place,
+         hotel_img1,hotel_img2,hotel_img3,
+        ceil(hotel_comment_good/(sum(hotel_comment_bad+hotel_comment_good+hotel_comment_justok))/0.2) as hotel_comment
+        from hotel_tb as a,hotel_source_tb as b
+        where a.hotel_id =b.hotel_id and a.hotel_id=#{hotelId} and b.room_id=0
+    </select>
+<select id="searchRoomByHotelId" parameterType="com.travel.pojo.HotelView" resultType="com.travel.pojo.HotelView">
+      select a.room_id,a.hotel_id, a.room_name,a.room_price,a.room_type,a.room_summary,
+      b.room_img1,b.room_img2,b.room_img3 from hotel_room_tb a,hotel_source_tb b
+      where a.hotel_id=b.hotel_id and a.room_id=b.room_id and a.hotel_id=#{hotelId}
+</select>
+    <insert id="addHotelOrder" parameterType="Map" >
+         INSERT INTO user_hotel_tb(user_id,hotel_id,room_id) VALUE (#{userId},#{hotelId}, #{roomId})
+    </insert>
+    <select id="searchUserHotelOrder" parameterType="com.travel.pojo.UserView" resultType="com.travel.pojo.HotelView">
+      select hotel_orderId, c.user_id,a.room_id,a.hotel_id,a.hotel_name,a.room_name,a.room_price,a.room_type,a.room_summary,
+      b.room_img1,b.room_img2,b.room_img3 from hotel_room_tb a,hotel_source_tb b,user_hotel_tb c
+      where a.hotel_id=c.hotel_id and a.room_id=c.room_id and b.hotel_id=c.hotel_id and
+      b.room_id=c.room_id and c.user_id=#{userId}
+</select>
+    <delete id="delHotelOrder" parameterType="int">
+        delete from user_hotel_tb where hotel_orderId=#{hotelOrderId}
+    </delete>
+</mapper>
