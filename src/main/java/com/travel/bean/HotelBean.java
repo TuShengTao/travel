@@ -1,5 +1,9 @@
 package com.travel.bean;
 //测试git第一次
+
+/**
+ *
+ */
 public class HotelBean {
     private int hotelId;//酒店ID
     private String hotelName;//酒店名字
